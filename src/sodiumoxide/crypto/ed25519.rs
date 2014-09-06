@@ -7,6 +7,7 @@ chosen-message attacks.
 #[cfg(test)]
 extern crate serialize;
 use libc::{c_ulonglong, c_int};
+use std::intrinsics::volatile_set_memory;
 
 mod byte_wrapper_macros;
 
@@ -47,7 +48,9 @@ pub struct Seed(pub [u8, ..SEEDBYTES]);
 impl Drop for Seed {
     fn drop(&mut self) {
         let &Seed(ref mut s) = self;
-        for e in s.mut_iter() { *e = 0 }
+        unsafe {
+            volatile_set_memory(s.as_mut_ptr(), 0, s.len())
+        }
     }
 }
 
@@ -63,7 +66,9 @@ pub struct SecretKey(pub [u8, ..SECRETKEYBYTES]);
 impl Drop for SecretKey {
     fn drop(&mut self) {
         let &SecretKey(ref mut sk) = self;
-        for e in sk.mut_iter() { *e = 0 }
+        unsafe {
+            volatile_set_memory(sk.as_mut_ptr(), 0, sk.len())
+        }
     }
 }
 
